@@ -4,10 +4,10 @@ import { useSets } from '../hooks/useSets'
 import { SetCard } from '../components/sets/SetCard'
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { data: sets, isLoading } = useSets()
 
-  if (isLoading) return null
+  if (isLoading || authLoading) return null
 
   const mySets = sets?.filter((s) => s.owner_id === user?.id) ?? []
   const sharedSets = sets?.filter((s) => s.owner_id !== user?.id) ?? []
