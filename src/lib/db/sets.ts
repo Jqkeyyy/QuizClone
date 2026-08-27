@@ -22,14 +22,12 @@ export async function createSet(input: {
   description?: string | null
   exam_date?: string | null
 }): Promise<Set> {
-  // @ts-expect-error - TS2345: Type inference issue with .insert()
   const { data, error } = await supabase.from('sets').insert(input).select().single()
   if (error) throw error
   return data
 }
 
 export async function updateSet(id: string, patch: SetUpdate): Promise<Set> {
-  // @ts-expect-error - TS2345: Type inference issue with .update()
   const { data, error } = await supabase.from('sets').update(patch).eq('id', id).select().single()
   if (error) throw error
   return data
