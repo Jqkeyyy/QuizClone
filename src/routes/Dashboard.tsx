@@ -5,9 +5,10 @@ import { SetCard } from '../components/sets/SetCard'
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth()
-  const { data: sets, isLoading } = useSets()
+  const { data: sets, isLoading, isError } = useSets()
 
   if (isLoading || authLoading) return null
+  if (isError) return <p className="text-sm text-red-600">Couldn't load your sets. Try refreshing the page.</p>
 
   const mySets = sets?.filter((s) => s.owner_id === user?.id) ?? []
   const sharedSets = sets?.filter((s) => s.owner_id !== user?.id) ?? []

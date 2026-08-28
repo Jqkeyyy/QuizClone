@@ -9,11 +9,12 @@ export default function SetOverview() {
   const setId = id!
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const { data: set, isLoading: setLoading } = useSet(setId)
-  const { data: cards, isLoading: cardsLoading } = useCards(setId)
+  const { data: set, isLoading: setLoading, isError: setError } = useSet(setId)
+  const { data: cards, isLoading: cardsLoading, isError: cardsError } = useCards(setId)
   const deleteSet = useDeleteSet()
 
   if (setLoading || cardsLoading || authLoading) return null
+  if (setError || cardsError) return <p className="text-sm text-red-600">Couldn't load this set. Try refreshing the page.</p>
   if (!set) return <p className="text-sm text-neutral-500">Set not found.</p>
 
   const isOwner = user?.id === set.owner_id
