@@ -8,7 +8,13 @@ import SetEditor from './routes/SetEditor'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+    },
+  },
+})
 
 export default function App() {
   return (

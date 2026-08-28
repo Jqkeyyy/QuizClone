@@ -10,8 +10,8 @@ export async function listSets(): Promise<Set[]> {
   return data
 }
 
-export async function getSet(id: string): Promise<Set> {
-  const { data, error } = await supabase.from('sets').select('*').eq('id', id).single()
+export async function getSet(id: string): Promise<Set | null> {
+  const { data, error } = await supabase.from('sets').select('*').eq('id', id).maybeSingle()
   if (error) throw error
   return data
 }
