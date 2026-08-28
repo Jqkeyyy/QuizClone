@@ -4,6 +4,7 @@ import Login from './routes/Login'
 import Dashboard from './routes/Dashboard'
 import SetNew from './routes/SetNew'
 import SetOverview from './routes/SetOverview'
+import SetEditor from './routes/SetEditor'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 
@@ -41,6 +42,16 @@ export default function App() {
               <ProtectedRoute>
                 <AppShell>
                   <SetOverview />
+                </AppShell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/set/:id/edit"
+            element={
+              <ProtectedRoute>
+                <AppShell>
+                  <SetEditor />
                 </AppShell>
               </ProtectedRoute>
             }
