@@ -8,14 +8,15 @@ import { BulkImportPanel } from '../components/cards/BulkImportPanel'
 export default function SetEditor() {
   const { id } = useParams<{ id: string }>()
   const setId = id!
-  const { data: set, isLoading: setLoading } = useSet(setId)
-  const { data: cards, isLoading: cardsLoading } = useCards(setId)
+  const { data: set, isLoading: setLoading, isError: setError } = useSet(setId)
+  const { data: cards, isLoading: cardsLoading, isError: cardsError } = useCards(setId)
   const upsertCard = useUpsertCard(setId)
   const bulkInsertCards = useBulkInsertCards(setId)
   const reorderCards = useReorderCards(setId)
   const deleteCard = useDeleteCard(setId)
 
   if (setLoading || cardsLoading) return null
+  if (setError || cardsError) return <p className="text-sm text-red-600">Couldn't load this set. Try refreshing the page.</p>
   if (!set) return <p className="text-sm text-neutral-500">Set not found.</p>
 
   const sorted = cards ?? []
@@ -30,7 +31,8 @@ export default function SetEditor() {
   }
 
   function addBlankCard() {
-    upsertCard.mutate({ set_id: setId, term: '', definition: '', position: sorted.length })
+    const nextPosition = (sorted[sorted.length - 1]?.position ?? -1) + 1
+    upsertCard.mutate({ set_id: setId, term: '', definition: '', position: nextPosition })
   }
 
   return (
