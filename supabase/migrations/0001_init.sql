@@ -135,6 +135,16 @@ create trigger cards_touch before update on public.cards for each row execute fu
 -- 3.1 Permission helpers
 -- security definer so cross-table RLS checks don't recurse.
 -- ─────────────────────────────────────────────────────────────
+-- WARNING: never use this function in a SELECT policy on public.sets itself.
+-- RLS re-checks a SELECT policy against the RETURNING clause of INSERT/UPDATE,
+-- and this function's query on sets can't see the row the current command
+-- just wrote (even though it's security definer / stable — this is snapshot
+-- visibility relative to the current command, not permissions or caching).
+-- That breaks `.insert(...).select()` / `.update(...).select()` on sets for
+-- everyone, including the owner. See 0002_fix_sets_select_returning.sql.
+-- It's still fine to use here in cards_select, profiles_select, and the
+-- storage policies below, since those query a different, already-committed
+-- table.
 create or replace function public.can_read_set(p_set uuid)
 returns boolean language sql security definer stable
 set search_path = public as $$
