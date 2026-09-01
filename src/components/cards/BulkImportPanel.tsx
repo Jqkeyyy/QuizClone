@@ -35,6 +35,18 @@ export function BulkImportPanel({ onImport }: BulkImportPanelProps) {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Tab') return
+          e.preventDefault()
+          const target = e.currentTarget
+          const start = target.selectionStart
+          const end = target.selectionEnd
+          const nextText = text.slice(0, start) + '\t' + text.slice(end)
+          setText(nextText)
+          requestAnimationFrame(() => {
+            target.selectionStart = target.selectionEnd = start + 1
+          })
+        }}
         placeholder="Paste term and definition pairs here…"
         rows={8}
         className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
