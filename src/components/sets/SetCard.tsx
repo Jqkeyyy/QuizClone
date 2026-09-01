@@ -1,0 +1,16 @@
+import { Link } from 'react-router'
+import type { Database } from '../../types/database'
+
+type SetRow = Database['public']['Tables']['sets']['Row']
+
+export function SetCard({ set }: { set: SetRow }) {
+  return (
+    <Link
+      to={`/set/${set.id}`}
+      className="block rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+    >
+      <h3 className="font-medium text-neutral-900">{set.title}</h3>
+      {set.description && <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{set.description}</p>}
+    </Link>
+  )
+}
