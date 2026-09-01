@@ -24,10 +24,14 @@ export default function Flashcards() {
 
   const starredSet = useMemo(() => new Set(starredIds), [starredIds])
 
-  const deck = useMemo(() => {
-    const base = starredOnly ? cards.filter((c) => starredSet.has(c.id)) : cards
-    return shuffleOn ? shuffle(base) : base
-  }, [cards, starredOnly, shuffleOn, starredSet])
+  // `filtered` only changes identity when starredOnly is on (membership can change
+  // on a star toggle) or when cards/starredOnly themselves change — when starredOnly
+  // is off it stays === cards, so starring a card never re-triggers the shuffle below.
+  const filtered = useMemo(
+    () => (starredOnly ? cards.filter((c) => starredSet.has(c.id)) : cards),
+    [cards, starredOnly, starredSet],
+  )
+  const deck = useMemo(() => (shuffleOn ? shuffle(filtered) : filtered), [filtered, shuffleOn])
 
   useEffect(() => {
     setIndex(0)
