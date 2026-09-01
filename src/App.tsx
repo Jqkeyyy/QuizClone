@@ -5,6 +5,7 @@ import Dashboard from './routes/Dashboard'
 import NewSet from './routes/NewSet'
 import SetOverview from './routes/SetOverview'
 import SetEditor from './routes/SetEditor'
+import Flashcards from './routes/Flashcards'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 
@@ -63,6 +64,16 @@ export default function App() {
               <ProtectedRoute>
                 <AppShell>
                   <SetEditor />
+                </AppShell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/set/:id/flashcards"
+            element={
+              <ProtectedRoute>
+                <AppShell>
+                  <Flashcards />
                 </AppShell>
               </ProtectedRoute>
             }

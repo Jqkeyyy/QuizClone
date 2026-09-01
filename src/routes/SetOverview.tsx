@@ -37,6 +37,12 @@ export default function SetOverview() {
         </div>
         <div className="flex gap-2">
           <Link
+            to={`/set/${set.id}/flashcards`}
+            className="rounded-md border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-100"
+          >
+            Flashcards
+          </Link>
+          <Link
             to={`/set/${set.id}/edit`}
             className="rounded-md border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-100"
           >
