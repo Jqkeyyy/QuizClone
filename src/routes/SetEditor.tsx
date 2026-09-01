@@ -6,7 +6,7 @@ import { BulkImportPanel } from '../components/cards/BulkImportPanel'
 
 export default function SetEditor() {
   const { id } = useParams<{ id: string }>()
-  const { data: set } = useSet(id)
+  const { data: set, isPending, isError } = useSet(id)
   const { data: cards = [] } = useCards(id)
   const updateSet = useUpdateSet(id as string)
   const upsertCards = useUpsertCards(id as string)
@@ -14,7 +14,13 @@ export default function SetEditor() {
   const deleteCard = useDeleteCard(id as string)
   const reorderCards = useReorderCards(id as string)
 
-  if (!set) return null
+  if (isPending) {
+    return <p className="text-sm text-neutral-500">Loading set…</p>
+  }
+
+  if (isError) {
+    return <p className="text-sm text-red-600">Set not found or you don't have access.</p>
+  }
 
   function handleAddCard() {
     const nextPosition = cards.length === 0 ? 0 : Math.max(...cards.map((c) => c.position)) + 1
@@ -37,7 +43,12 @@ export default function SetEditor() {
       <input
         defaultValue={set.title}
         onBlur={(e) => {
-          if (e.target.value !== set.title) updateSet.mutate({ title: e.target.value })
+          const value = e.target.value.trim()
+          if (value.length === 0) {
+            e.target.value = set.title
+            return
+          }
+          if (value !== set.title) updateSet.mutate({ title: value })
         }}
         className="w-full rounded-md border border-neutral-300 px-3 py-2 text-lg font-semibold outline-none focus:border-neutral-500"
       />

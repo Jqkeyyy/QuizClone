@@ -4,16 +4,28 @@ import { useCards } from '../hooks/useCards'
 
 export default function SetOverview() {
   const { id } = useParams<{ id: string }>()
-  const { data: set } = useSet(id)
+  const { data: set, isPending, isError } = useSet(id)
   const { data: cards = [] } = useCards(id)
   const deleteSet = useDeleteSet()
   const navigate = useNavigate()
 
-  if (!set) return null
+  if (isPending) {
+    return <p className="text-sm text-neutral-500">Loading set…</p>
+  }
 
-  async function handleDelete() {
-    await deleteSet.mutateAsync(set!.id)
-    navigate('/', { replace: true })
+  if (isError) {
+    return <p className="text-sm text-red-600">Set not found or you don't have access.</p>
+  }
+
+  function handleDelete() {
+    if (!set) return
+    const confirmed = window.confirm(
+      `Delete "${set.title}"? This will permanently delete all ${cards.length} cards in this set.`,
+    )
+    if (!confirmed) return
+    deleteSet.mutate(set.id, {
+      onSuccess: () => navigate('/', { replace: true }),
+    })
   }
 
   return (

@@ -5,8 +5,8 @@ import { SetCard } from '../components/sets/SetCard'
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { data: mySets = [] } = useMySets(user?.id)
-  const { data: sharedSets = [] } = useSharedSets(user?.id)
+  const { data: mySets = [], isPending: mySetsPending, isError: mySetsError } = useMySets(user?.id)
+  const { data: sharedSets = [], isPending: sharedSetsPending, isError: sharedSetsError } = useSharedSets(user?.id)
 
   return (
     <div className="space-y-8">
@@ -17,7 +17,11 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {mySets.length === 0 ? (
+      {mySetsPending ? (
+        <p className="text-sm text-neutral-500">Loading sets…</p>
+      ) : mySetsError ? (
+        <p className="text-sm text-red-600">Failed to load your sets. Please try again.</p>
+      ) : mySets.length === 0 ? (
         <p className="text-sm text-neutral-500">No sets yet — create your first one.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -27,15 +31,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      {sharedSets.length > 0 && (
-        <>
-          <h2 className="text-lg font-semibold text-neutral-900">Shared with me</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sharedSets.map((set) => (
-              <SetCard key={set.id} set={set} />
-            ))}
-          </div>
-        </>
+      {sharedSetsPending ? (
+        <p className="text-sm text-neutral-500">Loading shared sets…</p>
+      ) : sharedSetsError ? (
+        <p className="text-sm text-red-600">Failed to load shared sets. Please try again.</p>
+      ) : (
+        sharedSets.length > 0 && (
+          <>
+            <h2 className="text-lg font-semibold text-neutral-900">Shared with me</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sharedSets.map((set) => (
+                <SetCard key={set.id} set={set} />
+              ))}
+            </div>
+          </>
+        )
       )}
     </div>
   )

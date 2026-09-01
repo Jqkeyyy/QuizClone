@@ -9,16 +9,20 @@ export default function NewSet() {
   const createSet = useCreateSet()
   const [title, setTitle] = useState('')
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    const set = await createSet.mutateAsync({
-      owner_id: user.id,
-      title,
-      description: null,
-      exam_date: null,
-    })
-    navigate(`/set/${set.id}/edit`, { replace: true })
+    createSet.mutate(
+      {
+        owner_id: user.id,
+        title,
+        description: null,
+        exam_date: null,
+      },
+      {
+        onSuccess: (set) => navigate(`/set/${set.id}/edit`, { replace: true }),
+      },
+    )
   }
 
   return (
