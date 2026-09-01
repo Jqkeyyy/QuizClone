@@ -25,6 +25,7 @@ export interface Database {
           display_name?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       sets: {
         Row: {
@@ -57,6 +58,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       cards: {
         Row: {
@@ -92,6 +94,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       set_members: {
         Row: {
@@ -112,6 +115,7 @@ export interface Database {
           role?: 'viewer' | 'editor'
           created_at?: string
         }
+        Relationships: []
       }
       card_progress: {
         Row: {
@@ -153,6 +157,7 @@ export interface Database {
           due_at?: string
           last_seen_at?: string | null
         }
+        Relationships: []
       }
       study_sessions: {
         Row: {
@@ -185,6 +190,7 @@ export interface Database {
           cards_seen?: number
           cards_correct?: number
         }
+        Relationships: []
       }
       test_attempts: {
         Row: {
@@ -217,6 +223,7 @@ export interface Database {
           answers?: Json
           created_at?: string
         }
+        Relationships: []
       }
     }
     Views: Record<string, never>
