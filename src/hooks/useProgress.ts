@@ -32,3 +32,11 @@ export function useSetStarred(userId: string | undefined, setId: string | undefi
     },
   })
 }
+
+export function useSetProgress(userId: string | undefined, setId: string | undefined) {
+  return useQuery({
+    queryKey: ['progress', 'full', setId, userId],
+    queryFn: () => progressDb.getSetProgress(userId as string, setId as string),
+    enabled: !!userId && !!setId,
+  })
+}
