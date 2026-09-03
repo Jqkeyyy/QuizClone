@@ -39,3 +39,7 @@ dist-ssr
 
 # Supabase CLI local link state
 supabase/.temp
+
+# Keep planning notes and documentation out of the public repository
+*.md
+docs/
