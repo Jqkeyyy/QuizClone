@@ -42,4 +42,5 @@ supabase/.temp
 
 # Keep planning notes and documentation out of the public repository
 *.md
+!README.md
 docs/
