@@ -228,18 +228,6 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
-      can_read_set: {
-        Args: { p_set: string }
-        Returns: boolean
-      }
-      can_edit_set: {
-        Args: { p_set: string }
-        Returns: boolean
-      }
-      is_set_owner: {
-        Args: { p_set: string }
-        Returns: boolean
-      }
       add_member_by_email: {
         Args: { p_set: string; p_email: string; p_role?: 'viewer' | 'editor' }
         Returns: Database['public']['Tables']['set_members']['Row']

@@ -11,6 +11,7 @@ const Login = lazy(() => import('./routes/Login'))
 const NewSet = lazy(() => import('./routes/NewSet'))
 const SetEditor = lazy(() => import('./routes/SetEditor'))
 const SetOverview = lazy(() => import('./routes/SetOverview'))
+const Test = lazy(() => import('./routes/Test'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/set/:id/edit" element={<ProtectedPage><SetEditor /></ProtectedPage>} />
             <Route path="/set/:id/flashcards" element={<ProtectedPage><Flashcards /></ProtectedPage>} />
             <Route path="/set/:id/learn" element={<ProtectedPage><Learn /></ProtectedPage>} />
+            <Route path="/set/:id/test" element={<ProtectedPage><Test /></ProtectedPage>} />
           </Routes>
         </Suspense>
       </BrowserRouter>

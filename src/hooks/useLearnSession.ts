@@ -62,6 +62,7 @@ export function useLearnSession(
   cards: CardRow[],
   initialProgress: CardProgressRow[],
   examDate: string | null,
+  seededCardIds: string[] = [],
 ) {
   const queryClient = useQueryClient()
   const cardsById = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards])
@@ -72,9 +73,15 @@ export function useLearnSession(
   const [progressByCardId, setProgressByCardId] = useState(
     () => new Map(initialProgress.map((row) => [row.card_id, row])),
   )
-  const [queue, setQueue] = useState(() => buildLearnSession(cards, progressByCardId))
+  const [queue, setQueue] = useState(() =>
+    seededCardIds.length > 0
+      ? seededCardIds.filter((cardId) => cardsById.has(cardId))
+      : buildLearnSession(cards, progressByCardId),
+  )
   const [index, setIndex] = useState(0)
-  const [mode, setMode] = useState<'learn' | 'cram'>('learn')
+  const [mode, setMode] = useState<'learn' | 'cram' | 'seeded'>(
+    seededCardIds.length > 0 ? 'seeded' : 'learn',
+  )
   const [stats, setStats] = useState({ correct: 0, total: 0 })
   const [lastAnswer, setLastAnswer] = useState<LastAnswer | null>(null)
 
@@ -194,12 +201,13 @@ export function useLearnSession(
 
   const restart = useCallback(() => {
     setStartingBoxByCardId(new Map([...progressByCardId].map(([cardId, row]) => [cardId, row.box])))
-    setMode('learn')
-    setQueue(buildLearnSession(cards, progressByCardId))
+    const seeded = seededCardIds.filter((cardId) => cardsById.has(cardId))
+    setMode(seeded.length > 0 ? 'seeded' : 'learn')
+    setQueue(seeded.length > 0 ? seeded : buildLearnSession(cards, progressByCardId))
     setIndex(0)
     setStats({ correct: 0, total: 0 })
     setLastAnswer(null)
-  }, [cards, progressByCardId])
+  }, [cards, cardsById, progressByCardId, seededCardIds])
 
   const boxMovement = useMemo(() => {
     let boxUps = 0

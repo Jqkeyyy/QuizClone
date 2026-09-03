@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { LearnPrompt } from '../components/study/LearnPrompt'
 import { SessionSummary } from '../components/study/SessionSummary'
 import { useAuth } from '../hooks/useAuth'
@@ -19,6 +19,7 @@ interface LearnSessionProps {
   cards: CardRow[]
   initialProgress: CardProgressRow[]
   examDate: string | null
+  seededCardIds: string[]
 }
 
 function daysUntil(examDate: string | null): number | null {
@@ -29,8 +30,8 @@ function daysUntil(examDate: string | null): number | null {
   return Math.max(0, Math.ceil(difference / 86_400_000))
 }
 
-function LearnSession({ userId, setId, cards, initialProgress, examDate }: LearnSessionProps) {
-  const session = useLearnSession(userId, setId, cards, initialProgress, examDate)
+function LearnSession({ userId, setId, cards, initialProgress, examDate, seededCardIds }: LearnSessionProps) {
+  const session = useLearnSession(userId, setId, cards, initialProgress, examDate, seededCardIds)
   const masteryPct = useMemo(() => {
     const mastered = cards.filter((card) => {
       const progress = session.progressByCardId.get(card.id)
@@ -82,10 +83,17 @@ function LearnSession({ userId, setId, cards, initialProgress, examDate }: Learn
 
 export default function Learn() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const { data: set, isPending: setPending, isError: setError } = useSet(id)
   const { data: cards, isPending: cardsPending, isError: cardsError } = useCards(id)
   const { data: progress, isPending: progressPending, isError: progressError } = useSetProgress(user?.id, id)
+  const seededCardIds = useMemo(() => {
+    const available = new Set((cards ?? []).map((card) => card.id))
+    return (searchParams.get('cards') ?? '')
+      .split(',')
+      .filter((cardId) => available.has(cardId))
+  }, [cards, searchParams])
 
   if (setPending || cardsPending || progressPending) return <p className="text-sm text-neutral-500">Loading…</p>
   if (setError || cardsError || progressError || !set || !user || !id) {
@@ -108,6 +116,7 @@ export default function Learn() {
           cards={cards ?? []}
           initialProgress={progress ?? []}
           examDate={set.exam_date}
+          seededCardIds={seededCardIds}
         />
       )}
     </div>

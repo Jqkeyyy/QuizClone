@@ -42,6 +42,9 @@ export default function SetOverview() {
           <Link to={`/set/${set.id}/learn`} className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100">
             Learn
           </Link>
+          <Link to={`/set/${set.id}/test`} className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100">
+            Test
+          </Link>
           {isOwner && (
             <>
               <Link to={`/set/${set.id}/edit`} className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100">Edit</Link>
