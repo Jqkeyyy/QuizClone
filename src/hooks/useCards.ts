@@ -1,41 +1,42 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as cardsDb from '../lib/db/cards'
-import type { Database } from '../types/database'
 
-type CardInsert = Database['public']['Tables']['cards']['Insert']
-
-export function useCards(setId: string) {
-  return useQuery({ queryKey: ['cards', setId], queryFn: () => cardsDb.listCards(setId), enabled: !!setId })
+export function useCards(setId: string | undefined) {
+  return useQuery({
+    queryKey: ['cards', setId],
+    queryFn: () => cardsDb.listCards(setId as string),
+    enabled: !!setId,
+  })
 }
 
-export function useUpsertCard(setId: string) {
-  const qc = useQueryClient()
+export function useUpsertCards(setId: string) {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (card: CardInsert) => cardsDb.upsertCard(card),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['cards', setId] }),
+    mutationFn: cardsDb.upsertCards,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
   })
 }
 
 export function useBulkInsertCards(setId: string) {
-  const qc = useQueryClient()
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (rows: { term: string; definition: string }[]) => cardsDb.bulkInsertCards(setId, rows),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['cards', setId] }),
-  })
-}
-
-export function useReorderCards(setId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (orderedIds: string[]) => cardsDb.reorderCards(orderedIds),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['cards', setId] }),
+    mutationFn: (pairs: Array<{ term: string; definition: string }>) => cardsDb.bulkInsert(setId, pairs),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
   })
 }
 
 export function useDeleteCard(setId: string) {
-  const qc = useQueryClient()
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => cardsDb.deleteCard(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['cards', setId] }),
+    mutationFn: cardsDb.deleteCard,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
+  })
+}
+
+export function useReorderCards(setId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: cardsDb.reorder,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
   })
 }

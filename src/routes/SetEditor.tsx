@@ -1,82 +1,88 @@
-// src/routes/SetEditor.tsx
 import { Link, useParams } from 'react-router'
-import { useSet } from '../hooks/useSets'
-import { useBulkInsertCards, useCards, useDeleteCard, useReorderCards, useUpsertCard } from '../hooks/useCards'
-import { CardEditorRow } from '../components/cards/CardEditorRow'
 import { BulkImportPanel } from '../components/cards/BulkImportPanel'
+import { CardEditorRow } from '../components/cards/CardEditorRow'
+import { useBulkInsertCards, useCards, useDeleteCard, useReorderCards, useUpsertCards } from '../hooks/useCards'
+import { useSet, useUpdateSet } from '../hooks/useSet'
 
 export default function SetEditor() {
   const { id } = useParams<{ id: string }>()
-  const setId = id!
-  const { data: set, isLoading: setLoading, isError: setError } = useSet(setId)
-  const { data: cards, isLoading: cardsLoading, isError: cardsError } = useCards(setId)
-  const upsertCard = useUpsertCard(setId)
+  const setId = id ?? ''
+  const { data: set, isPending: setPending, isError: setError } = useSet(id)
+  const { data: cards = [], isPending: cardsPending, isError: cardsError } = useCards(id)
+  const updateSet = useUpdateSet(setId)
+  const upsertCards = useUpsertCards(setId)
   const bulkInsertCards = useBulkInsertCards(setId)
-  const reorderCards = useReorderCards(setId)
   const deleteCard = useDeleteCard(setId)
+  const reorderCards = useReorderCards(setId)
 
-  if (setLoading || cardsLoading) return null
-  if (setError || cardsError) return <p className="text-sm text-red-600">Couldn't load this set. Try refreshing the page.</p>
-  if (!set) return <p className="text-sm text-neutral-500">Set not found.</p>
+  if (setPending || cardsPending) return <p className="text-sm text-neutral-500">Loading set…</p>
+  if (setError || cardsError) return <p className="text-sm text-red-600">Couldn't load this set. Try again.</p>
+  if (!set) return <p className="text-sm text-neutral-500">Set not found or you don't have access.</p>
 
-  const sorted = cards ?? []
-
-  function moveCard(index: number, direction: -1 | 1) {
-    const targetIndex = index + direction
-    if (targetIndex < 0 || targetIndex >= sorted.length) return
-    const reordered = [...sorted]
-    const [moved] = reordered.splice(index, 1)
-    reordered.splice(targetIndex, 0, moved)
-    reorderCards.mutate(reordered.map((c) => c.id))
+  function handleAddCard() {
+    const nextPosition = cards.length === 0 ? 0 : Math.max(...cards.map((card) => card.position)) + 1
+    upsertCards.mutate([{ set_id: setId, term: '', definition: '', position: nextPosition }])
   }
 
-  function addBlankCard() {
-    const nextPosition = (sorted[sorted.length - 1]?.position ?? -1) + 1
-    upsertCard.mutate({ set_id: setId, term: '', definition: '', position: nextPosition })
+  function handleMove(index: number, direction: -1 | 1) {
+    const target = index + direction
+    if (target < 0 || target >= cards.length) return
+    const currentCard = cards[index]
+    const targetCard = cards[target]
+    reorderCards.mutate([
+      { id: currentCard.id, position: targetCard.position },
+      { id: targetCard.id, position: currentCard.position },
+    ])
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-neutral-900">{set.title}</h1>
-        <Link
-          to={`/set/${setId}`}
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100"
-        >
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex items-center gap-4">
+        <input
+          defaultValue={set.title}
+          onBlur={(event) => {
+            const value = event.target.value.trim()
+            if (!value) {
+              event.target.value = set.title
+            } else if (value !== set.title) {
+              updateSet.mutate({ title: value })
+            }
+          }}
+          aria-label="Set title"
+          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-lg font-semibold outline-none focus:border-neutral-500"
+        />
+        <Link to={`/set/${setId}`} className="rounded-md border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-100">
           Done
         </Link>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white">
-        {sorted.length === 0 ? (
-          <p className="p-4 text-sm text-neutral-500">No cards yet.</p>
-        ) : (
-          sorted.map((card, i) => (
-            <CardEditorRow
-              key={card.id}
-              card={card}
-              isFirst={i === 0}
-              isLast={i === sorted.length - 1}
-              onSave={(patch) => upsertCard.mutate({ id: card.id, set_id: setId, ...patch })}
-              onDelete={() => deleteCard.mutate(card.id)}
-              onMoveUp={() => moveCard(i, -1)}
-              onMoveDown={() => moveCard(i, 1)}
-            />
-          ))
-        )}
-        <button
-          type="button"
-          onClick={addBlankCard}
-          className="w-full border-t border-neutral-200 p-2 text-sm text-neutral-600 hover:bg-neutral-50"
-        >
-          + Add card
-        </button>
+      <div className="space-y-2">
+        {cards.map((card, index) => (
+          <div key={card.id} className="flex items-center gap-2">
+            <div className="flex flex-col gap-1">
+              <button type="button" onClick={() => handleMove(index, -1)} disabled={index === 0} aria-label="Move card up" className="text-xs text-neutral-400 disabled:opacity-30">▲</button>
+              <button type="button" onClick={() => handleMove(index, 1)} disabled={index === cards.length - 1} aria-label="Move card down" className="text-xs text-neutral-400 disabled:opacity-30">▼</button>
+            </div>
+            <div className="flex-1">
+              <CardEditorRow
+                term={card.term}
+                definition={card.definition}
+                onChange={(patch) => upsertCards.mutate([{ id: card.id, set_id: setId, term: patch.term ?? card.term, definition: patch.definition ?? card.definition }])}
+                onDelete={() => deleteCard.mutate(card.id)}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div>
+      <button type="button" onClick={handleAddCard} className="rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+        + Add card
+      </button>
+
+      <section>
         <h2 className="mb-2 text-sm font-medium text-neutral-700">Bulk paste import</h2>
-        <BulkImportPanel importing={bulkInsertCards.isPending} onImport={(rows) => bulkInsertCards.mutate(rows)} />
-      </div>
+        <BulkImportPanel importing={bulkInsertCards.isPending} onImport={(pairs) => bulkInsertCards.mutate(pairs)} />
+      </section>
     </div>
   )
 }

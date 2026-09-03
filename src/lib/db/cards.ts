@@ -1,10 +1,18 @@
-import { supabase } from '../supabase'
 import type { Database } from '../../types/database'
+import { supabase } from '../supabase'
 
-type Card = Database['public']['Tables']['cards']['Row']
+type CardRow = Database['public']['Tables']['cards']['Row']
 type CardInsert = Database['public']['Tables']['cards']['Insert']
 
-export async function listCards(setId: string): Promise<Card[]> {
+export type CardUpsertInput = {
+  id?: string
+  set_id: string
+  term: string
+  definition: string
+  position?: number
+}
+
+export async function listCards(setId: string): Promise<CardRow[]> {
   const { data, error } = await supabase
     .from('cards')
     .select('*')
@@ -14,42 +22,42 @@ export async function listCards(setId: string): Promise<Card[]> {
   return data
 }
 
-export async function upsertCard(card: CardInsert): Promise<Card> {
-  const { data, error } = await supabase.from('cards').upsert(card).select().single()
+export async function upsertCards(rows: CardUpsertInput[]): Promise<CardRow[]> {
+  const { data, error } = await supabase.from('cards').upsert(rows).select()
   if (error) throw error
   return data
 }
 
-export async function bulkInsertCards(
+export async function bulkInsert(
   setId: string,
-  rows: { term: string; definition: string }[],
-): Promise<Card[]> {
-  const { data: existing, error: maxErr } = await supabase
+  pairs: Array<{ term: string; definition: string }>,
+): Promise<CardRow[]> {
+  const { data: lastCards, error: positionError } = await supabase
     .from('cards')
     .select('position')
     .eq('set_id', setId)
     .order('position', { ascending: false })
     .limit(1)
-  if (maxErr) throw maxErr
+  if (positionError) throw positionError
 
-  const startPosition = (existing[0]?.position ?? -1) + 1
-  const inserts: CardInsert[] = rows.map((row, i) => ({
+  const startPosition = (lastCards[0]?.position ?? -1) + 1
+  const rows: CardInsert[] = pairs.map((pair, index) => ({
     set_id: setId,
-    term: row.term,
-    definition: row.definition,
-    position: startPosition + i,
+    term: pair.term,
+    definition: pair.definition,
+    position: startPosition + index,
   }))
 
-  const { data, error } = await supabase.from('cards').insert(inserts).select()
+  const { data, error } = await supabase.from('cards').insert(rows).select()
   if (error) throw error
   return data
 }
 
-export async function reorderCards(orderedIds: string[]): Promise<void> {
+export async function reorder(order: Array<{ id: string; position: number }>): Promise<void> {
   const results = await Promise.all(
-    orderedIds.map((id, position) => supabase.from('cards').update({ position }).eq('id', id)),
+    order.map(({ id, position }) => supabase.from('cards').update({ position }).eq('id', id)),
   )
-  const failed = results.find((r) => r.error)
+  const failed = results.find((result) => result.error)
   if (failed?.error) throw failed.error
 }
 

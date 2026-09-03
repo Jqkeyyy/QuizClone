@@ -1,50 +1,50 @@
 import { Link } from 'react-router'
-import { useAuth } from '../hooks/useAuth'
-import { useSets } from '../hooks/useSets'
 import { SetCard } from '../components/sets/SetCard'
+import { useAuth } from '../hooks/useAuth'
+import { useMySets, useSharedSets } from '../hooks/useSet'
 
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth()
-  const { data: sets, isLoading, isError } = useSets()
-
-  if (isLoading || authLoading) return null
-  if (isError) return <p className="text-sm text-red-600">Couldn't load your sets. Try refreshing the page.</p>
-
-  const mySets = sets?.filter((s) => s.owner_id === user?.id) ?? []
-  const sharedSets = sets?.filter((s) => s.owner_id !== user?.id) ?? []
+  const { user } = useAuth()
+  const { data: mySets = [], isPending: mySetsPending, isError: mySetsError } = useMySets(user?.id)
+  const {
+    data: sharedSets = [],
+    isPending: sharedSetsPending,
+    isError: sharedSetsError,
+  } = useSharedSets(user?.id)
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-neutral-900">My sets</h1>
-        <Link
-          to="/set/new"
-          className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800"
-        >
+        <h1 className="text-xl font-semibold text-neutral-900">My sets</h1>
+        <Link to="/set/new" className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
           New set
         </Link>
       </div>
 
-      {mySets.length === 0 ? (
-        <p className="text-sm text-neutral-500">No sets yet — create one to get started.</p>
+      {mySetsPending ? (
+        <p className="text-sm text-neutral-500">Loading sets…</p>
+      ) : mySetsError ? (
+        <p className="text-sm text-red-600">Failed to load your sets. Please try again.</p>
+      ) : mySets.length === 0 ? (
+        <p className="text-sm text-neutral-500">No sets yet — create your first one.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {mySets.map((s) => (
-            <SetCard key={s.id} set={s} />
-          ))}
+          {mySets.map((set) => <SetCard key={set.id} set={set} />)}
         </div>
       )}
 
-      {sharedSets.length > 0 && (
+      {sharedSetsPending ? (
+        <p className="text-sm text-neutral-500">Loading shared sets…</p>
+      ) : sharedSetsError ? (
+        <p className="text-sm text-red-600">Failed to load shared sets. Please try again.</p>
+      ) : sharedSets.length > 0 ? (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-neutral-900">Shared with me</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sharedSets.map((s) => (
-              <SetCard key={s.id} set={s} />
-            ))}
+            {sharedSets.map((set) => <SetCard key={set.id} set={set} />)}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:watch": "vitest",
     "types": "supabase gen types typescript --project-id xindxbtcmssingsjuhhx --schema public > src/types/database.ts"
   },
   "dependencies": {

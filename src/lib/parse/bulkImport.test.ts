@@ -1,70 +1,43 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { parsePaste } from './bulkImport'
 
 describe('parsePaste', () => {
-  test('splits tab-separated, newline-separated rows', () => {
-    const result = parsePaste('cat\tfeline\ndog\tcanine', '\t', '\n')
+  it('splits tab-separated, newline-separated rows by default', () => {
+    const result = parsePaste('cat\tfeline\ndog\tcanine')
     expect(result.rows).toEqual([
-      { term: 'cat', definition: 'feline', valid: true },
-      { term: 'dog', definition: 'canine', valid: true },
+      { term: 'cat', definition: 'feline', raw: 'cat\tfeline', valid: true, duplicate: false },
+      { term: 'dog', definition: 'canine', raw: 'dog\tcanine', valid: true, duplicate: false },
     ])
     expect(result.validCount).toBe(2)
     expect(result.invalidCount).toBe(0)
   })
 
-  test('supports comma and semicolon separators', () => {
-    const result = parsePaste('cat,feline;dog,canine', ',', ';')
-    expect(result.validCount).toBe(2)
-    expect(result.rows[0]).toEqual({ term: 'cat', definition: 'feline', valid: true })
+  it('supports comma, semicolon, and custom separators', () => {
+    expect(parsePaste('cat,feline;dog,canine', ',', ';').validCount).toBe(2)
+    expect(parsePaste('cat::feline||dog::canine', '::', '||').validCount).toBe(2)
   })
 
-  test('trims whitespace around fields', () => {
-    const result = parsePaste('  cat \t  feline  ', '\t', '\n')
-    expect(result.rows[0]).toEqual({ term: 'cat', definition: 'feline', valid: true })
-  })
-
-  test('drops blank rows', () => {
-    const result = parsePaste('cat\tfeline\n\n\ndog\tcanine', '\t', '\n')
+  it('trims whitespace and drops blank rows', () => {
+    const result = parsePaste('  cat \t feline  \r\n\r\n dog\tcanine')
     expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toMatchObject({ term: 'cat', definition: 'feline' })
   })
 
-  test('handles \\r\\n line endings when rowSep is newline', () => {
-    const result = parsePaste('cat\tfeline\r\ndog\tcanine', '\t', '\n')
-    expect(result.rows).toHaveLength(2)
-    expect(result.validCount).toBe(2)
+  it('flags rows that do not have exactly two non-empty fields', () => {
+    const result = parsePaste('cat\tfeline\tdetail\ndog\nmouse\t', '\t', '\n')
+    expect(result.validCount).toBe(0)
+    expect(result.invalidCount).toBe(3)
+    expect(result.rows.every((row) => !row.valid)).toBe(true)
   })
 
-  test('flags rows that do not split into exactly 2 parts', () => {
-    const result = parsePaste('cat\tfeline\ndog\ncat\tfeline\textra', '\t', '\n')
-    expect(result.rows).toEqual([
-      { term: 'cat', definition: 'feline', valid: true },
-      { term: '', definition: '', valid: false },
-      { term: '', definition: '', valid: false },
-    ])
-    expect(result.validCount).toBe(1)
-    expect(result.invalidCount).toBe(2)
+  it('marks duplicate terms case-insensitively while keeping both rows', () => {
+    const result = parsePaste('cat\tfeline\nCat\tfelid\ndog\tcanine')
+    expect(result.rows.map((row) => row.duplicate)).toEqual([true, true, false])
+    expect(result.validCount).toBe(3)
   })
 
-  test('flags a row with an empty field as invalid', () => {
-    const result = parsePaste('cat\t\ndog\tcanine', '\t', '\n')
-    expect(result.rows[0].valid).toBe(false)
-    expect(result.validCount).toBe(1)
-  })
-
-  test('collapses internal newlines within a field', () => {
-    const result = parsePaste('cat\tfeline\nanimal;dog\tcanine', '\t', ';')
-    expect(result.rows[0]).toEqual({ term: 'cat', definition: 'feline animal', valid: true })
-  })
-
-  test('reports duplicate terms case-insensitively but keeps both rows', () => {
-    const result = parsePaste('cat\tfeline\nCat\tanother feline', '\t', '\n')
-    expect(result.rows).toHaveLength(2)
-    expect(result.validCount).toBe(2)
-    expect(result.duplicateTerms).toEqual(['cat'])
-  })
-
-  test('supports a custom separator string', () => {
-    const result = parsePaste('cat::feline||dog::canine', '::', '||')
-    expect(result.validCount).toBe(2)
+  it('collapses internal newlines when rows use another separator', () => {
+    const result = parsePaste('cat\tfe\nline;dog\tcanine', '\t', ';')
+    expect(result.rows[0]).toMatchObject({ term: 'cat', definition: 'fe line' })
   })
 })

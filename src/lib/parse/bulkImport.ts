@@ -1,56 +1,50 @@
 export interface ParsedRow {
   term: string
   definition: string
+  raw: string
   valid: boolean
+  duplicate: boolean
 }
 
-export interface ParseResult {
+export interface ParsePasteResult {
   rows: ParsedRow[]
   validCount: number
   invalidCount: number
-  duplicateTerms: string[]
 }
 
-function splitRows(text: string, rowSep: string): string[] {
-  if (rowSep === '\n') {
-    return text.split(/\r\n|\r|\n/)
-  }
-  return text.split(rowSep)
-}
-
-function collapseWhitespace(field: string): string {
-  return field.replace(/\r?\n/g, ' ').trim()
-}
-
-export function parsePaste(text: string, termSep: string, rowSep: string): ParseResult {
-  const rawRows = splitRows(text, rowSep)
+export function parsePaste(
+  text: string,
+  termSeparator: string = '\t',
+  rowSeparator: string = '\n',
+): ParsePasteResult {
+  const rawRows = rowSeparator === '\n' ? text.split(/\r\n|\r|\n/) : text.split(rowSeparator)
   const rows: ParsedRow[] = []
   const termCounts = new Map<string, number>()
 
   for (const rawRow of rawRows) {
-    if (rawRow.trim() === '') continue
+    const raw = rawRow.replace(/\r\n|\r|\n/g, ' ').trim()
+    if (!raw) continue
 
-    const parts = rawRow.split(termSep)
-    const valid = parts.length === 2 && parts[0].trim() !== '' && collapseWhitespace(parts[1]) !== ''
+    const parts = raw.split(termSeparator)
+    const term = (parts[0] ?? '').trim()
+    const definition = (parts[1] ?? '').trim()
+    const valid = parts.length === 2 && term.length > 0 && definition.length > 0
 
-    if (!valid) {
-      rows.push({ term: '', definition: '', valid: false })
-      continue
+    if (valid) {
+      const key = term.toLocaleLowerCase()
+      termCounts.set(key, (termCounts.get(key) ?? 0) + 1)
     }
 
-    const term = collapseWhitespace(parts[0])
-    const definition = collapseWhitespace(parts[1])
-    rows.push({ term, definition, valid: true })
-
-    const key = term.toLowerCase()
-    termCounts.set(key, (termCounts.get(key) ?? 0) + 1)
+    rows.push({ term, definition, raw, valid, duplicate: false })
   }
 
-  const validCount = rows.filter((r) => r.valid).length
-  const invalidCount = rows.length - validCount
-  const duplicateTerms = [...termCounts.entries()]
-    .filter(([, count]) => count > 1)
-    .map(([term]) => term)
+  for (const row of rows) {
+    row.duplicate = row.valid && (termCounts.get(row.term.toLocaleLowerCase()) ?? 0) > 1
+  }
 
-  return { rows, validCount, invalidCount, duplicateTerms }
+  return {
+    rows,
+    validCount: rows.filter((row) => row.valid).length,
+    invalidCount: rows.filter((row) => !row.valid).length,
+  }
 }
