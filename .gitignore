@@ -12,6 +12,20 @@ dist
 dist-ssr
 *.local
 
+# Local environment files may contain credentials. Keep only redacted examples.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Private keys and signing credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -25,3 +39,4 @@ dist-ssr
 
 # Supabase CLI local link state
 supabase/.temp
+

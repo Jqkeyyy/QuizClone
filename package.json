@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "check": "npm run lint && npm test && npm run build",
+    "security:audit": "npm audit --audit-level=low",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
