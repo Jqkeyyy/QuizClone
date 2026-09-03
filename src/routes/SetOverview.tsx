@@ -2,6 +2,11 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 import { useCards } from '../hooks/useCards'
 import { useDeleteSet, useSet } from '../hooks/useSet'
+import { downloadSetBackup } from '../lib/export/setBackup'
+
+function formatExamDate(value: string): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`))
+}
 
 export default function SetOverview() {
   const { id } = useParams<{ id: string }>()
@@ -33,6 +38,7 @@ export default function SetOverview() {
         <div>
           <h1 className="text-xl font-semibold text-neutral-900">{set.title}</h1>
           {set.description && <p className="mt-1 text-sm text-neutral-500">{set.description}</p>}
+          {set.exam_date && <p className="mt-1 text-sm text-neutral-500">Exam: {formatExamDate(set.exam_date)}</p>}
           <p className="mt-1 text-sm text-neutral-400">{cards.length} cards</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
@@ -45,6 +51,13 @@ export default function SetOverview() {
           <Link to={`/set/${set.id}/test`} className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100">
             Test
           </Link>
+          <button
+            type="button"
+            onClick={() => downloadSetBackup(set, cards)}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100"
+          >
+            Export backup
+          </button>
           {isOwner && (
             <>
               <Link to={`/set/${set.id}/edit`} className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100">Edit</Link>

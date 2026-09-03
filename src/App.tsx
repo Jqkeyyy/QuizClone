@@ -9,6 +9,7 @@ const Flashcards = lazy(() => import('./routes/Flashcards'))
 const Learn = lazy(() => import('./routes/Learn'))
 const Login = lazy(() => import('./routes/Login'))
 const NewSet = lazy(() => import('./routes/NewSet'))
+const ImportSet = lazy(() => import('./routes/ImportSet'))
 const SetEditor = lazy(() => import('./routes/SetEditor'))
 const SetOverview = lazy(() => import('./routes/SetOverview'))
 const Test = lazy(() => import('./routes/Test'))
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
             <Route path="/set/new" element={<ProtectedPage><NewSet /></ProtectedPage>} />
+            <Route path="/set/import" element={<ProtectedPage><ImportSet /></ProtectedPage>} />
             <Route path="/set/:id" element={<ProtectedPage><SetOverview /></ProtectedPage>} />
             <Route path="/set/:id/edit" element={<ProtectedPage><SetEditor /></ProtectedPage>} />
             <Route path="/set/:id/flashcards" element={<ProtectedPage><Flashcards /></ProtectedPage>} />

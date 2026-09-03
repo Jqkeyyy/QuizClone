@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as setsDb from '../lib/db/sets'
 import type { Database } from '../types/database'
+import type { SetBackup } from '../lib/export/setBackup'
+import * as cardsDb from '../lib/db/cards'
 
 type SetRow = Database['public']['Tables']['sets']['Row']
 type SetInsert = Database['public']['Tables']['sets']['Insert']
@@ -58,6 +60,38 @@ export function useDeleteSet() {
     mutationFn: (setId: string) => setsDb.deleteSet(setId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sets'] })
+    },
+  })
+}
+
+export function useImportSetBackup() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ userId, backup }: { userId: string; backup: SetBackup }) => {
+      const created = await setsDb.createSet({
+        owner_id: userId,
+        title: backup.set.title,
+        description: backup.set.description,
+        exam_date: backup.set.exam_date,
+      })
+
+      try {
+        if (backup.cards.length > 0) {
+          await cardsDb.bulkInsert(
+            created.id,
+            backup.cards.map(({ term, definition }) => ({ term, definition })),
+          )
+        }
+      } catch (error) {
+        await setsDb.deleteSet(created.id)
+        throw error
+      }
+
+      return created
+    },
+    onSuccess: (created: SetRow) => {
+      queryClient.invalidateQueries({ queryKey: ['sets', 'mine', created.owner_id] })
     },
   })
 }

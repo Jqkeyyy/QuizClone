@@ -56,6 +56,38 @@ export default function SetEditor() {
         </Link>
       </div>
 
+      <section className="grid gap-4 rounded-lg border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+        <label className="block space-y-1 sm:col-span-2">
+          <span className="text-sm font-medium text-neutral-700">Description</span>
+          <textarea
+            defaultValue={set.description ?? ''}
+            onBlur={(event) => {
+              const value = event.target.value.trim() || null
+              if (value !== set.description) updateSet.mutate({ description: value })
+            }}
+            placeholder="Optional notes about this set"
+            rows={3}
+            className="w-full resize-y rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-sm font-medium text-neutral-700">Exam date</span>
+          <input
+            type="date"
+            defaultValue={set.exam_date ?? ''}
+            onBlur={(event) => {
+              const value = event.target.value || null
+              if (value !== set.exam_date) updateSet.mutate({ exam_date: value })
+            }}
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+          />
+        </label>
+        <div className="self-end pb-2 text-xs text-neutral-500">
+          {updateSet.isPending ? 'Saving set details…' : 'Changes save when you leave a field.'}
+        </div>
+        {updateSet.isError && <p className="text-sm text-red-600 sm:col-span-2">Could not save the set details. Please try again.</p>}
+      </section>
+
       <div className="space-y-2">
         {cards.map((card, index) => (
           <div key={card.id} className="flex items-center gap-2">

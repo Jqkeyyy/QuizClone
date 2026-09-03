@@ -16,9 +16,14 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-neutral-900">My sets</h1>
-        <Link to="/set/new" className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
-          New set
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/set/import" className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100">
+            Import backup
+          </Link>
+          <Link to="/set/new" className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
+            New set
+          </Link>
+        </div>
       </div>
 
       {mySetsPending ? (

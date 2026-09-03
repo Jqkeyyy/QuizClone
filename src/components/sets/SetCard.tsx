@@ -11,6 +11,7 @@ export function SetCard({ set }: { set: SetRow }) {
     >
       <h3 className="font-medium text-neutral-900">{set.title}</h3>
       {set.description && <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{set.description}</p>}
+      {set.exam_date && <p className="mt-2 text-xs text-neutral-400">Exam {set.exam_date}</p>}
     </Link>
   )
 }
