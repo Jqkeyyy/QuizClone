@@ -55,3 +55,8 @@ export async function flushProgress(rows: CardProgressFlushRow[]): Promise<void>
   const { error } = await supabase.from('card_progress').upsert(rows)
   if (error) throw error
 }
+
+export async function resetSetProgress(setId: string): Promise<void> {
+  const { error } = await supabase.rpc('reset_my_set_progress', { p_set: setId })
+  if (error) throw error
+}

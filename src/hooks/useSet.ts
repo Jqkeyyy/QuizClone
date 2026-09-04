@@ -58,7 +58,14 @@ export function useDeleteSet() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (setId: string) => setsDb.deleteSet(setId),
-    onSuccess: () => {
+    onSuccess: (_, setId) => {
+      queryClient.removeQueries({ queryKey: ['sets', setId], exact: true })
+      queryClient.removeQueries({ queryKey: ['cards', setId] })
+      queryClient.removeQueries({ queryKey: ['set-members', setId] })
+      queryClient.removeQueries({ queryKey: ['set-membership', setId] })
+      queryClient.removeQueries({ queryKey: ['progress', 'full', setId] })
+      queryClient.removeQueries({ queryKey: ['study-sessions', setId] })
+      queryClient.removeQueries({ queryKey: ['test-attempts', setId] })
       queryClient.invalidateQueries({ queryKey: ['sets'] })
     },
   })

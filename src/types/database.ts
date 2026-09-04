@@ -232,6 +232,14 @@ export interface Database {
         Args: { p_set: string; p_email: string; p_role?: 'viewer' | 'editor' }
         Returns: Database['public']['Tables']['set_members']['Row']
       }
+      reset_my_set_progress: {
+        Args: { p_set: string }
+        Returns: undefined
+      }
+      swap_card_positions: {
+        Args: { p_first: string; p_second: string }
+        Returns: undefined
+      }
     }
     Enums: Record<string, never>
   }

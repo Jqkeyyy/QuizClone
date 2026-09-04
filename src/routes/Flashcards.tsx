@@ -43,7 +43,7 @@ export default function Flashcards() {
   }
 
   function toggleStar() {
-    if (!current) return
+    if (!current || setStarred.isPending) return
     setStarred.mutate({ cardId: current.id, starred: !starredSet.has(current.id) })
     if (starredOnly) setFlipped(false)
   }
@@ -73,6 +73,7 @@ export default function Flashcards() {
       <div className="flex flex-wrap gap-2 text-sm">
         <button
           type="button"
+          aria-pressed={shuffleOn}
           onClick={() => {
             setStartWith((value) => (value === 'term' ? 'definition' : 'term'))
             setFlipped(false)
@@ -83,6 +84,7 @@ export default function Flashcards() {
         </button>
         <button
           type="button"
+          aria-pressed={starredOnly}
           onClick={() => {
             setShuffleOn((value) => !value)
             setIndex(0)
@@ -119,12 +121,18 @@ export default function Flashcards() {
         <FlashcardView
           front={startWith === 'term' ? current.term : current.definition}
           back={startWith === 'term' ? current.definition : current.term}
+          frontImage={startWith === 'term' ? current.term_image : current.definition_image}
+          backImage={startWith === 'term' ? current.definition_image : current.term_image}
           flipped={flipped}
           starred={starredSet.has(current.id)}
           position={safeIndex + 1}
           total={deck.length}
           onFlip={() => setFlipped((f) => !f)}
           onToggleStar={toggleStar}
+          onPrevious={() => goTo(safeIndex - 1)}
+          onNext={() => goTo(safeIndex + 1)}
+          canGoPrevious={safeIndex > 0}
+          canGoNext={safeIndex < deck.length - 1}
         />
       )}
 

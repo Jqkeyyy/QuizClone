@@ -13,7 +13,7 @@ const ROW_SEPARATORS = [
 
 export interface BulkImportPanelProps {
   importing: boolean
-  onImport: (pairs: Array<{ term: string; definition: string }>) => void
+  onImport: (pairs: Array<{ term: string; definition: string }>) => Promise<void>
 }
 
 export function BulkImportPanel({ importing, onImport }: BulkImportPanelProps) {
@@ -30,13 +30,18 @@ export function BulkImportPanel({ importing, onImport }: BulkImportPanelProps) {
     [text, effectiveTermSeparator, effectiveRowSeparator],
   )
 
-  function handleImport() {
+  async function handleImport() {
     const pairs = result.rows
       .filter((row) => row.valid)
       .map(({ term, definition }) => ({ term, definition }))
     if (pairs.length === 0) return
-    onImport(pairs)
-    setText('')
+    try {
+      await onImport(pairs)
+      setText('')
+    } catch {
+      // The parent mutation owns the visible error state. Keep the pasted
+      // content in place so the user can retry without reconstructing it.
+    }
   }
 
   return (
@@ -135,7 +140,7 @@ export function BulkImportPanel({ importing, onImport }: BulkImportPanelProps) {
       <button
         type="button"
         disabled={importing || result.validCount === 0}
-        onClick={handleImport}
+        onClick={() => void handleImport()}
         className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {importing ? 'Importing…' : `Import ${result.validCount} cards`}

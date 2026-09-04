@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useKeyboard } from '../../hooks/useKeyboard'
 import { gradeTyped } from '../../lib/study/grading'
 import type { Question } from '../../lib/study/questions'
+import { CardImage } from '../cards/CardImage'
 import { ChoiceGrid } from './ChoiceGrid'
 import { FeedbackBanner } from './FeedbackBanner'
 import { TypedAnswer } from './TypedAnswer'
@@ -65,12 +66,13 @@ export function LearnPrompt({ question, position, total, onAnswered, onAdvance, 
       </div>
       <p className="text-sm text-neutral-500">{position} / {total}</p>
 
-      <div className="flex min-h-40 items-center justify-center rounded-2xl border border-neutral-200 bg-white p-8 text-center">
+      <div className="flex min-h-40 flex-col items-center justify-center gap-4 rounded-2xl border border-neutral-200 bg-white p-8 text-center">
+        <CardImage path={question.promptImage} alt="Question illustration" className="max-h-44 max-w-full rounded-lg object-contain" />
         <h1 className="text-2xl text-neutral-900">{question.prompt}</h1>
       </div>
 
       {question.type === 'multiple-choice' ? (
-        <ChoiceGrid options={question.options} selectedIndex={selectedIndex} correctIndex={answered ? question.correctIndex : null} onSelect={handleSelect} />
+        <ChoiceGrid options={question.options} optionImages={question.optionImages} selectedIndex={selectedIndex} correctIndex={answered ? question.correctIndex : null} onSelect={handleSelect} />
       ) : (
         <TypedAnswer disabled={answered} onSubmit={handleTypedSubmit} />
       )}

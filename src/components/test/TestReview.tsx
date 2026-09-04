@@ -1,4 +1,5 @@
 import type { GradedTest } from '../../lib/study/test'
+import { CardImage } from '../cards/CardImage'
 
 export interface TestReviewProps {
   result: GradedTest
@@ -45,8 +46,15 @@ export function TestReview({
                 {item.correct ? (item.near ? 'Close enough' : 'Correct') : 'Incorrect'}
               </span>
             </div>
+            <CardImage path={item.promptImage} alt="Question illustration" className="mt-3 max-h-32 max-w-full rounded object-contain object-left" />
             <p className="mt-2 text-sm text-neutral-600">Your answer: {item.userAnswer}</p>
-            {!item.correct && <p className="mt-1 text-sm text-neutral-800">Correct answer: {item.correctAnswer}</p>}
+            <CardImage path={item.userAnswerImage} alt="Selected answer illustration" className="mt-2 max-h-24 max-w-full rounded object-contain object-left" />
+            {!item.correct && (
+              <div className="mt-1">
+                <p className="text-sm text-neutral-800">Correct answer: {item.correctAnswer}</p>
+                <CardImage path={item.correctAnswerImage} alt="Correct answer illustration" className="mt-2 max-h-24 max-w-full rounded object-contain object-left" />
+              </div>
+            )}
           </article>
         ))}
       </div>

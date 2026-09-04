@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { MatchingTestQuestion, TestAnswer, TestQuestion } from '../../lib/study/test'
+import { CardImage } from '../cards/CardImage'
 
 export interface TestQuestionCardProps {
   question: TestQuestion
@@ -51,6 +52,7 @@ function MatchingQuestion({
                     : 'border-neutral-300'
               }`}
             >
+              <CardImage path={pair.termImage} alt="Term illustration" className="mb-2 h-16 w-full rounded object-contain" />
               {pair.term}
             </button>
           ))}
@@ -68,6 +70,7 @@ function MatchingQuestion({
                   : 'border-neutral-300 disabled:opacity-60'
               }`}
             >
+              <CardImage path={definition.image} alt="Definition illustration" className="mb-2 h-16 w-full rounded object-contain" />
               {definition.text}
             </button>
           ))}
@@ -85,6 +88,7 @@ export function TestQuestionCard({ question, answer, onAnswer }: TestQuestionCar
   if (question.type === 'multiple-choice') {
     return (
       <div className="space-y-4">
+        <CardImage path={question.promptImage} alt="Question illustration" className="max-h-44 max-w-full rounded-lg object-contain" />
         <h2 className="text-lg font-medium text-neutral-900">{question.prompt}</h2>
         <div className="grid gap-2">
           {question.options.map((option, index) => (
@@ -96,7 +100,8 @@ export function TestQuestionCard({ question, answer, onAnswer }: TestQuestionCar
                 answer === index ? 'border-blue-500 bg-blue-50' : 'border-neutral-300 hover:bg-neutral-50'
               }`}
             >
-              {option}
+              <CardImage path={question.optionImages[index]} alt="Answer illustration" className="mb-2 h-16 w-full rounded object-contain object-left" />
+              <span>{option}</span>
             </button>
           ))}
         </div>
@@ -107,6 +112,7 @@ export function TestQuestionCard({ question, answer, onAnswer }: TestQuestionCar
   if (question.type === 'written') {
     return (
       <label className="block space-y-4">
+        <CardImage path={question.promptImage} alt="Question illustration" className="max-h-44 max-w-full rounded-lg object-contain" />
         <span className="block text-lg font-medium text-neutral-900">{question.prompt}</span>
         <textarea
           value={typeof answer === 'string' ? answer : ''}
@@ -123,7 +129,9 @@ export function TestQuestionCard({ question, answer, onAnswer }: TestQuestionCar
   return (
     <div className="space-y-5">
       <div>
+        <CardImage path={question.termImage} alt="Term illustration" className="mb-2 max-h-36 max-w-full rounded object-contain" />
         <p className="text-lg font-medium text-neutral-900">{question.term}</p>
+        <CardImage path={question.definitionImage} alt="Definition illustration" className="mt-3 max-h-36 max-w-full rounded object-contain" />
         <p className="mt-2 text-neutral-600">{question.definition}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">

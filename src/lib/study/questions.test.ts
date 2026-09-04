@@ -58,6 +58,22 @@ describe('question builders', () => {
     })
   })
 
+  it('keeps images attached to the correct prompt and answer sides', () => {
+    const illustrated = {
+      ...cards[0],
+      term_image: 'set-1/term.png',
+      definition_image: 'set-1/definition.png',
+    }
+    const choice = makeMultipleChoice(illustrated, [illustrated, ...cards.slice(1)], 4)
+    expect(choice.promptImage).toBe(illustrated.term_image)
+    expect(choice.optionImages[choice.correctIndex]).toBe(illustrated.definition_image)
+
+    expect(makeTypedQuestion(illustrated, 'definition-to-term')).toMatchObject({
+      promptImage: illustrated.definition_image,
+      correctAnswerImage: illustrated.term_image,
+    })
+  })
+
   it('escalates question types by box', () => {
     expect(buildQuestion(cards[0], cards, 0).type).toBe('multiple-choice')
     const boxOne = buildQuestion(cards[0], cards, 1)

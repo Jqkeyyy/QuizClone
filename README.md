@@ -15,10 +15,13 @@ The application is designed primarily for personal use. It currently provides si
 - Create, edit, and delete flashcard sets.
 - Add optional descriptions and exam dates.
 - Add, update, delete, and reorder individual cards.
+- Attach JPEG, PNG, WebP, or GIF images to either side of a card.
 - Bulk-import term/definition pairs with a preview and validation.
 - Use tabs, commas, new lines, semicolons, or custom separators during bulk import.
 - Download a set as a versioned `.quizclone.json` backup.
 - Validate and restore previously exported backups.
+- Share sets with existing accounts as viewer or editor, update access, and remove members.
+- Search and sort owned and shared sets from the dashboard.
 
 ### Flashcards
 
@@ -41,6 +44,7 @@ Keyboard shortcuts:
 
 - Adaptive Leitner scheduling across boxes 0 through 5.
 - Multiple-choice and written questions that become more challenging as cards advance.
+- Display card images in prompts and multiple-choice answers.
 - Incorrect cards are reintroduced later in the session.
 - Override a result when a typed answer should have been accepted.
 - Track accuracy, lapses, mastery, and due dates per card.
@@ -52,11 +56,21 @@ Keyboard shortcuts:
 
 - Configure question count, direction, and question types.
 - Multiple-choice, written, true/false, and matching questions.
+- Include card images in prompts, choices, matching pairs, and answer review.
 - Mix term-to-definition and definition-to-term prompts.
 - Prioritize weak or unseen cards.
 - Grade written answers with normalization and typo tolerance.
 - Review every answer after submission.
 - Save test attempts and update card-learning progress.
+
+### Progress
+
+- Track mastery, reviews due, and cumulative answer accuracy for each set.
+- See the distribution of studied cards across Leitner boxes.
+- Review recent Learn and cram sessions with their answer totals.
+- Review recent test scores, best score, and average score.
+- Expand saved test attempts to review each graded answer.
+- Reset personal progress and history for a set in one confirmed action.
 
 ## Technology
 
@@ -121,6 +135,7 @@ Run every migration in order. Later migrations intentionally harden privileges a
 - Anonymous clients have no direct table access.
 - Authenticated users can access only their own sets, authorized shared sets, and their own progress/history.
 - Set owners control membership; editors can modify cards only where explicitly authorized.
+- Set visibility metadata stays synchronized with actual membership changes.
 - Storage policies use the same set-level read and edit checks.
 - Security-definer helpers live in a non-exposed schema with fixed search paths and restricted execution rights.
 - Profile email addresses are synchronized from Supabase Auth and cannot be overwritten by the browser client.
@@ -263,14 +278,16 @@ After deployment:
 Implemented and actively used:
 
 - Personal authentication
+- Editable display name and account profile
 - Set and card management
 - Bulk card import
 - Flashcards, Learn, and Test modes
 - Persistent progress and test results
+- Per-set progress dashboard and test history
 - Set export and restoration
 - Database and repository security automation
 
-Database foundations exist for set sharing, image storage, and study-session history, but their complete user interfaces are not currently part of the personal-use workflow.
+Set sharing, personal study-session history, and private card images are available for existing QuizClone accounts.
 
 ## Contributing
 

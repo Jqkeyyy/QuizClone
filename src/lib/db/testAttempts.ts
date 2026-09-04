@@ -12,6 +12,17 @@ export interface CreateTestAttemptInput {
   answers: Json
 }
 
+export async function listTestAttempts(userId: string, setId: string): Promise<TestAttemptRow[]> {
+  const { data, error } = await supabase
+    .from('test_attempts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('set_id', setId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
 export async function createTestAttempt(input: CreateTestAttemptInput): Promise<TestAttemptRow> {
   const { data, error } = await supabase
     .from('test_attempts')

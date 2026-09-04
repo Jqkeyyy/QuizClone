@@ -70,6 +70,33 @@ describe('test generation', () => {
     })
   })
 
+  it('preserves the right images through question generation and grading', () => {
+    const illustratedCards = cards.map((item) => ({
+      ...item,
+      term_image: `${item.id}-term.png`,
+      definition_image: `${item.id}-definition.png`,
+    }))
+    const [question] = buildTest(
+      illustratedCards,
+      new Map(),
+      { ...baseConfig, questionCount: 1, types: ['multiple-choice'] },
+      () => 0.4,
+    )
+    expect(question.type).toBe('multiple-choice')
+    if (question.type !== 'multiple-choice') return
+
+    const sourceCard = illustratedCards.find(({ id }) => id === question.cardIds[0])!
+    expect(question.promptImage).toBe(sourceCard.term_image)
+    expect(question.optionImages[question.correctIndex]).toBe(sourceCard.definition_image)
+
+    const result = gradeTest([question], { [question.id]: question.correctIndex })
+    expect(result.items[0]).toMatchObject({
+      promptImage: sourceCard.term_image,
+      userAnswerImage: sourceCard.definition_image,
+      correctAnswerImage: sourceCard.definition_image,
+    })
+  })
+
   it('generates both true and false pairings', () => {
     const [truthy] = buildTest(
       cards,

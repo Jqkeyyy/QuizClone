@@ -23,27 +23,33 @@ interface BaseTestQuestion {
 export interface ChoiceTestQuestion extends BaseTestQuestion {
   type: 'multiple-choice'
   prompt: string
+  promptImage: string | null
   options: string[]
+  optionImages: Array<string | null>
   correctIndex: number
 }
 
 export interface WrittenTestQuestion extends BaseTestQuestion {
   type: 'written'
   prompt: string
+  promptImage: string | null
   correctAnswer: string
+  correctAnswerImage: string | null
 }
 
 export interface TrueFalseTestQuestion extends BaseTestQuestion {
   type: 'true-false'
   term: string
+  termImage: string | null
   definition: string
+  definitionImage: string | null
   correctAnswer: boolean
 }
 
 export interface MatchingTestQuestion extends BaseTestQuestion {
   type: 'matching'
-  pairs: Array<{ cardId: string; term: string; definition: string }>
-  definitions: Array<{ cardId: string; text: string }>
+  pairs: Array<{ cardId: string; term: string; termImage: string | null; definition: string; definitionImage: string | null }>
+  definitions: Array<{ cardId: string; text: string; image: string | null }>
 }
 
 export type TestQuestion =
@@ -64,6 +70,9 @@ export interface GradedTestItem {
   correctAnswer: string
   correct: boolean
   near: boolean
+  promptImage: string | null
+  userAnswerImage: string | null
+  correctAnswerImage: string | null
 }
 
 export interface GradedTest {
@@ -89,6 +98,14 @@ function answerFor(card: CardRow, direction: Exclude<TestDirection, 'mixed'>): s
 
 function promptFor(card: CardRow, direction: Exclude<TestDirection, 'mixed'>): string {
   return direction === 'term-to-definition' ? card.term : card.definition
+}
+
+function promptImageFor(card: CardRow, direction: Exclude<TestDirection, 'mixed'>): string | null {
+  return direction === 'term-to-definition' ? card.term_image : card.definition_image
+}
+
+function answerImageFor(card: CardRow, direction: Exclude<TestDirection, 'mixed'>): string | null {
+  return direction === 'term-to-definition' ? card.definition_image : card.term_image
 }
 
 function resolveDirection(
@@ -135,11 +152,14 @@ function makeChoiceQuestion(
   const seen = new Set([correctAnswer])
   const distractors = shuffled(pool, random)
     .filter((candidate) => candidate.id !== card.id)
-    .map((candidate) => answerFor(candidate, direction))
-    .filter((answer) => !seen.has(answer) && seen.add(answer))
+    .map((candidate) => ({
+      text: answerFor(candidate, direction),
+      image: answerImageFor(candidate, direction),
+    }))
+    .filter(({ text }) => !seen.has(text) && seen.add(text))
     .slice(0, 3)
   const entries = shuffled(
-    [{ text: correctAnswer, correct: true }, ...distractors.map((text) => ({ text, correct: false }))],
+    [{ text: correctAnswer, image: answerImageFor(card, direction), correct: true }, ...distractors.map((entry) => ({ ...entry, correct: false }))],
     random,
   )
 
@@ -148,7 +168,9 @@ function makeChoiceQuestion(
     type: 'multiple-choice',
     cardIds: [card.id],
     prompt: promptFor(card, direction),
+    promptImage: promptImageFor(card, direction),
     options: entries.map(({ text }) => text),
+    optionImages: entries.map(({ image }) => image),
     correctIndex: entries.findIndex(({ correct }) => correct),
   }
 }
@@ -170,7 +192,9 @@ function makeTrueFalseQuestion(
     type: 'true-false',
     cardIds: [card.id],
     term: card.term,
+    termImage: card.term_image,
     definition: pairedCard.definition,
+    definitionImage: pairedCard.definition_image,
     correctAnswer: shouldBeTrue,
   }
 }
@@ -183,7 +207,9 @@ function makeMatchingQuestion(
   const pairs = cards.map((card) => ({
     cardId: card.id,
     term: card.term,
+    termImage: card.term_image,
     definition: card.definition,
+    definitionImage: card.definition_image,
   }))
   return {
     id,
@@ -191,7 +217,7 @@ function makeMatchingQuestion(
     cardIds: cards.map(({ id: cardId }) => cardId),
     pairs,
     definitions: shuffled(
-      pairs.map(({ cardId, definition }) => ({ cardId, text: definition })),
+      pairs.map(({ cardId, definition, definitionImage }) => ({ cardId, text: definition, image: definitionImage })),
       random,
     ),
   }
@@ -233,7 +259,9 @@ export function buildTest(
         type: 'written',
         cardIds: [card.id],
         prompt: promptFor(card, direction),
+        promptImage: promptImageFor(card, direction),
         correctAnswer: answerFor(card, direction),
+        correctAnswerImage: answerImageFor(card, direction),
       })
     }
   }
@@ -261,6 +289,9 @@ export function gradeTest(questions: TestQuestion[], answers: TestAnswers): Grad
         correctAnswer: question.options[question.correctIndex],
         correct: selectedIndex === question.correctIndex,
         near: false,
+        promptImage: question.promptImage,
+        userAnswerImage: question.optionImages[selectedIndex] ?? null,
+        correctAnswerImage: question.optionImages[question.correctIndex] ?? null,
       })
     } else if (question.type === 'written') {
       const userAnswer = typeof answer === 'string' ? answer : ''
@@ -272,6 +303,9 @@ export function gradeTest(questions: TestQuestion[], answers: TestAnswers): Grad
         prompt: question.prompt,
         userAnswer: userAnswer || 'No answer',
         correctAnswer: question.correctAnswer,
+        promptImage: question.promptImage,
+        userAnswerImage: null,
+        correctAnswerImage: question.correctAnswerImage,
         ...grade,
       })
     } else if (question.type === 'true-false') {
@@ -285,6 +319,9 @@ export function gradeTest(questions: TestQuestion[], answers: TestAnswers): Grad
         correctAnswer: answerLabel(question.correctAnswer),
         correct: userAnswer === question.correctAnswer,
         near: false,
+        promptImage: question.termImage,
+        userAnswerImage: null,
+        correctAnswerImage: null,
       })
     } else {
       const assignments =
@@ -303,6 +340,9 @@ export function gradeTest(questions: TestQuestion[], answers: TestAnswers): Grad
           correctAnswer: pair.definition,
           correct: selectedCardId === pair.cardId,
           near: false,
+          promptImage: pair.termImage,
+          userAnswerImage: selectedDefinition?.image ?? null,
+          correctAnswerImage: pair.definitionImage,
         })
       }
     }

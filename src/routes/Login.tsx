@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
+import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -8,20 +9,29 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const { session, loading } = useAuth()
   const navigate = useNavigate()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setBusy(false)
-    if (error) {
-      setError(error.message)
-      return
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) {
+        setError(signInError.message)
+        return
+      }
+      navigate('/', { replace: true })
+    } catch {
+      setError('Could not connect. Check your connection and try again.')
+    } finally {
+      setBusy(false)
     }
-    navigate('/', { replace: true })
   }
+
+  if (loading) return <p role="status" className="p-6 text-sm text-neutral-500">Checking your session…</p>
+  if (session) return <Navigate to="/" replace />
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50">
@@ -29,6 +39,8 @@ export default function Login() {
         <h1 className="text-xl font-semibold text-neutral-900">Sign in</h1>
         <input
           type="email"
+          aria-label="Email"
+          autoComplete="email"
           required
           autoFocus
           placeholder="Email"
@@ -38,6 +50,8 @@ export default function Login() {
         />
         <input
           type="password"
+          aria-label="Password"
+          autoComplete="current-password"
           required
           placeholder="Password"
           value={password}

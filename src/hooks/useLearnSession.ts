@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Database } from '../types/database'
 import * as progressDb from '../lib/db/progress'
+import * as sessionsDb from '../lib/db/studySessions'
 import { schedule, type CardProgressState } from '../lib/study/leitner'
 import { buildCramSession, buildLearnSession, requeue } from '../lib/study/session'
 import { buildQuestion, type Question } from '../lib/study/questions'
@@ -87,6 +88,32 @@ export function useLearnSession(
 
   const dirtyRef = useRef<Map<string, CardProgressRow>>(new Map())
   const answeredSinceFlushRef = useRef(0)
+  const statsRef = useRef(stats)
+  const studySessionRef = useRef<Promise<Database['public']['Tables']['study_sessions']['Row'] | null> | null>(null)
+
+  const ensureStudySession = useCallback(() => {
+    if (studySessionRef.current) return
+    const sessionMode = mode === 'cram' ? 'cram' : 'learn'
+    studySessionRef.current = sessionsDb.createStudySession(userId, setId, sessionMode).catch((error: unknown) => {
+      console.error('Could not start study session:', error)
+      return null
+    })
+  }, [mode, setId, userId])
+
+  const finishStudySession = useCallback(async () => {
+    const sessionPromise = studySessionRef.current
+    if (!sessionPromise) return
+    studySessionRef.current = null
+
+    const session = await sessionPromise
+    if (!session) return
+    try {
+      await sessionsDb.finishStudySession(session.id, statsRef.current.total, statsRef.current.correct)
+      await queryClient.invalidateQueries({ queryKey: ['study-sessions', setId, userId] })
+    } catch (error) {
+      console.error('Could not finish study session:', error)
+    }
+  }, [queryClient, setId, userId])
 
   const flush = useCallback(async () => {
     const pendingRows = Array.from(dirtyRef.current.values())
@@ -124,6 +151,7 @@ export function useLearnSession(
   }, [flush])
 
   useEffect(() => () => safelyFlush(), [safelyFlush])
+  useEffect(() => () => { void finishStudySession() }, [finishStudySession])
 
   const isDone = index >= queue.length
   const currentCardId = isDone ? null : queue[index]
@@ -142,9 +170,14 @@ export function useLearnSession(
     if (isDone) safelyFlush()
   }, [isDone, safelyFlush])
 
+  useEffect(() => {
+    if (isDone) void finishStudySession()
+  }, [finishStudySession, isDone])
+
   const submitAnswer = useCallback(
     (correct: boolean) => {
       if (!currentCard || lastAnswer) return
+      ensureStudySession()
       const now = new Date()
       const existing = progressByCardId.get(currentCard.id)
       const previous = existing ?? buildProgressRow(userId, setId, currentCard.id, false, emptyProgressState(now))
@@ -154,16 +187,18 @@ export function useLearnSession(
       setProgressByCardId((current) => new Map(current).set(currentCard.id, nextRow))
       dirtyRef.current.set(currentCard.id, nextRow)
       answeredSinceFlushRef.current += 1
-      setStats((current) => ({
-        correct: current.correct + (correct ? 1 : 0),
-        total: current.total + 1,
-      }))
+      const nextStats = {
+        correct: statsRef.current.correct + (correct ? 1 : 0),
+        total: statsRef.current.total + 1,
+      }
+      statsRef.current = nextStats
+      setStats(nextStats)
       setLastAnswer({ cardId: currentCard.id, previousProgress: previous, correct, overridden: false })
 
       if (!correct) setQueue((current) => requeue(current, index))
       if (answeredSinceFlushRef.current >= FLUSH_EVERY) safelyFlush()
     },
-    [currentCard, examDateObject, index, lastAnswer, progressByCardId, safelyFlush, setId, userId],
+    [currentCard, ensureStudySession, examDateObject, index, lastAnswer, progressByCardId, safelyFlush, setId, userId],
   )
 
   const advance = useCallback(() => {
@@ -186,7 +221,9 @@ export function useLearnSession(
 
     setProgressByCardId((current) => new Map(current).set(lastAnswer.cardId, correctedRow))
     dirtyRef.current.set(lastAnswer.cardId, correctedRow)
-    setStats((current) => ({ correct: current.correct + 1, total: current.total }))
+    const nextStats = { correct: statsRef.current.correct + 1, total: statsRef.current.total }
+    statsRef.current = nextStats
+    setStats(nextStats)
     setLastAnswer((current) => current && { ...current, correct: true, overridden: true })
   }, [examDateObject, lastAnswer, setId, userId])
 
@@ -196,6 +233,7 @@ export function useLearnSession(
     setQueue(buildCramSession(cards, progressByCardId))
     setIndex(0)
     setStats({ correct: 0, total: 0 })
+    statsRef.current = { correct: 0, total: 0 }
     setLastAnswer(null)
   }, [cards, progressByCardId])
 
@@ -206,6 +244,7 @@ export function useLearnSession(
     setQueue(seeded.length > 0 ? seeded : buildLearnSession(cards, progressByCardId))
     setIndex(0)
     setStats({ correct: 0, total: 0 })
+    statsRef.current = { correct: 0, total: 0 }
     setLastAnswer(null)
   }, [cards, cardsById, progressByCardId, seededCardIds])
 

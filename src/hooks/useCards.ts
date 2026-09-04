@@ -9,10 +9,19 @@ export function useCards(setId: string | undefined) {
   })
 }
 
-export function useUpsertCards(setId: string) {
+export function useCreateCard(setId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: cardsDb.upsertCards,
+    mutationFn: cardsDb.createCard,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
+  })
+}
+
+export function useUpdateCard(setId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: cardsDb.CardTextUpdate }) =>
+      cardsDb.updateCard(id, patch),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
   })
 }
@@ -36,7 +45,8 @@ export function useDeleteCard(setId: string) {
 export function useReorderCards(setId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: cardsDb.reorder,
+    mutationFn: ({ firstCardId, secondCardId }: { firstCardId: string; secondCardId: string }) =>
+      cardsDb.swapCardPositions(firstCardId, secondCardId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards', setId] }),
   })
 }

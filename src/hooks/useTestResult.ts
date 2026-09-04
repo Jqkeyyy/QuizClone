@@ -1,11 +1,19 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Database, Json } from '../types/database'
-import { createTestAttempt } from '../lib/db/testAttempts'
+import { createTestAttempt, listTestAttempts } from '../lib/db/testAttempts'
 import { flushProgress } from '../lib/db/progress'
 import { schedule, type CardProgressState } from '../lib/study/leitner'
 import type { GradedTest, TestAnswers, TestConfig } from '../lib/study/test'
 
 type CardProgressRow = Database['public']['Tables']['card_progress']['Row']
+
+export function useTestAttempts(userId: string | undefined, setId: string | undefined) {
+  return useQuery({
+    queryKey: ['test-attempts', setId, userId],
+    queryFn: () => listTestAttempts(userId as string, setId as string),
+    enabled: !!userId && !!setId,
+  })
+}
 
 export interface SaveTestResultInput {
   userId: string
@@ -68,6 +76,7 @@ export function useSaveTestResult() {
     },
     onSuccess: (_attempt, input) => {
       queryClient.invalidateQueries({ queryKey: ['progress', 'full', input.setId, input.userId] })
+      queryClient.invalidateQueries({ queryKey: ['test-attempts', input.setId, input.userId] })
     },
   })
 }

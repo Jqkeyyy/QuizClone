@@ -5,6 +5,10 @@ type SetRow = Database['public']['Tables']['sets']['Row']
 type SetInsert = Database['public']['Tables']['sets']['Insert']
 type SetUpdate = Database['public']['Tables']['sets']['Update']
 
+export interface SharedSet extends SetRow {
+  member_role: Database['public']['Tables']['set_members']['Row']['role']
+}
+
 export async function listMySets(userId: string): Promise<SetRow[]> {
   const { data, error } = await supabase
     .from('sets')
@@ -15,14 +19,18 @@ export async function listMySets(userId: string): Promise<SetRow[]> {
   return data
 }
 
-export async function listSharedSets(userId: string): Promise<SetRow[]> {
+export async function listSharedSets(userId: string): Promise<SharedSet[]> {
   const { data, error } = await supabase
     .from('sets')
-    .select('*, set_members!inner(user_id)')
+    .select('*, set_members!inner(user_id, role)')
     .eq('set_members.user_id', userId)
     .order('updated_at', { ascending: false })
   if (error) throw error
-  return data as SetRow[]
+  const rows = data as unknown as Array<SetRow & { set_members: Array<{ role: SharedSet['member_role'] }> }>
+  return rows.map(({ set_members, ...set }) => ({
+    ...set,
+    member_role: set_members[0].role,
+  }))
 }
 
 export async function getSet(id: string): Promise<SetRow | null> {

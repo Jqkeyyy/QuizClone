@@ -1,11 +1,14 @@
+import { CardImage } from '../cards/CardImage'
+
 export interface ChoiceGridProps {
   options: string[]
+  optionImages?: Array<string | null>
   selectedIndex: number | null
   correctIndex: number | null
   onSelect: (index: number) => void
 }
 
-export function ChoiceGrid({ options, selectedIndex, correctIndex, onSelect }: ChoiceGridProps) {
+export function ChoiceGrid({ options, optionImages = [], selectedIndex, correctIndex, onSelect }: ChoiceGridProps) {
   const answered = correctIndex !== null
 
   return (
@@ -24,14 +27,16 @@ export function ChoiceGrid({ options, selectedIndex, correctIndex, onSelect }: C
 
         return (
           <button
-            key={option}
+            key={`${option}-${index}`}
             type="button"
             disabled={answered}
             onClick={() => onSelect(index)}
-            className={`rounded-md border px-4 py-3 text-left text-sm transition-colors disabled:cursor-default ${state}`}
+            aria-pressed={selected}
+            className={`flex items-center gap-3 rounded-md border px-4 py-3 text-left text-sm transition-colors disabled:cursor-default ${state}`}
           >
             <span className="mr-2 opacity-60">{index + 1}.</span>
-            {option}
+            <CardImage path={optionImages[index]} alt="Answer illustration" className="h-12 w-16 shrink-0 rounded object-contain" />
+            <span>{option}</span>
           </button>
         )
       })}

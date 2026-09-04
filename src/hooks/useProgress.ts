@@ -40,3 +40,17 @@ export function useSetProgress(userId: string | undefined, setId: string | undef
     enabled: !!userId && !!setId,
   })
 }
+
+export function useResetSetProgress(userId: string, setId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => progressDb.resetSetProgress(setId),
+    onSuccess: () => {
+      queryClient.setQueryData(['progress', 'full', setId, userId], [])
+      queryClient.setQueryData(['progress', 'starred', setId, userId], [])
+      queryClient.setQueryData(['study-sessions', setId, userId], [])
+      queryClient.setQueryData(['test-attempts', setId, userId], [])
+    },
+  })
+}
