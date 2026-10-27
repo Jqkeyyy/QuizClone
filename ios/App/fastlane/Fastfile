@@ -13,7 +13,11 @@ platform :ios do
     setup_ci
 
     # Creates a distribution certificate and App Store profile if needed.
-    get_certificates(api_key: api_key)
+    get_certificates(
+      api_key: api_key,
+      keychain_path: ENV["KEYCHAIN_PATH"],
+      keychain_password: "",
+    )
     get_provisioning_profile(api_key: api_key, app_identifier: "com.jqkeyyy.flashcards")
 
     update_code_signing_settings(
