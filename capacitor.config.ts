@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 const config: CapacitorConfig = {
   // Change this to a reverse-DNS ID you own before submitting to the App Store.
   appId: 'com.jqkeyyy.flashcards',
-  appName: 'Flashcards',
+  appName: 'Cardwise',
   webDir: 'dist',
   ios: {
     contentInset: 'never',
