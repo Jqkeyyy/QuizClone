@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+/* Keep content clear of the notch and home indicator in the iOS app. */
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
