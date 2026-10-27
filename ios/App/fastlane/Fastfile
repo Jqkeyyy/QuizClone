@@ -12,10 +12,12 @@ platform :ios do
     # Temporary keychain on the CI runner.
     setup_ci
 
-    # Creates a distribution certificate and App Store profile if needed.
-    get_certificates(
-      api_key: api_key,
-      keychain_path: ENV["KEYCHAIN_PATH"],
+    # Reuse the one distribution certificate stored in GitHub secrets
+    # instead of creating a new one on every run.
+    import_certificate(
+      certificate_path: ENV["DIST_CERT_PATH"],
+      certificate_password: ENV["DIST_CERT_PASSWORD"],
+      keychain_name: "fastlane_tmp_keychain",
       keychain_password: "",
     )
     get_provisioning_profile(api_key: api_key, app_identifier: "com.jqkeyyy.flashcards")
