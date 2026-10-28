@@ -30,11 +30,6 @@ platform :ios do
       File.join(xcode_profiles, "#{lane_context[SharedValues::SIGH_UUID]}.mobileprovision"),
     )
 
-    # Diagnostics: which profiles Xcode can see and what this one contains.
-    sh("ls -la ~/Library/MobileDevice/Provisioning\ Profiles ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles || true")
-    sh("security cms -D -i '#{lane_context[SharedValues::SIGH_PROFILE_PATH]}' | plutil -extract Name raw -o - - ; security cms -D -i '#{lane_context[SharedValues::SIGH_PROFILE_PATH]}' | plutil -extract Platform json -o - -")
-    sh("security find-identity -v -p codesigning")
-
     update_code_signing_settings(
       path: "App.xcodeproj",
       targets: ["App"],
