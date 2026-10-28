@@ -22,6 +22,14 @@ platform :ios do
     )
     get_provisioning_profile(api_key: api_key, app_identifier: "com.jqkeyyy.flashcards")
 
+    # Xcode 16+ reads profiles from UserData, not MobileDevice.
+    xcode_profiles = File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles")
+    FileUtils.mkdir_p(xcode_profiles)
+    FileUtils.cp(
+      lane_context[SharedValues::SIGH_PROFILE_PATH],
+      File.join(xcode_profiles, "#{lane_context[SharedValues::SIGH_UUID]}.mobileprovision"),
+    )
+
     update_code_signing_settings(
       path: "App.xcodeproj",
       targets: ["App"],
