@@ -19,3 +19,10 @@ export async function updateDisplayName(userId: string, displayName: string | nu
   if (error) throw error
   return data
 }
+
+export async function deleteAccount(): Promise<void> {
+  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' })
+  if (error) throw error
+  // The session's user no longer exists, so only clear local state.
+  await supabase.auth.signOut({ scope: 'local' })
+}
